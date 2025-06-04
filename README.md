@@ -21,3 +21,7 @@ pip install opencv-python
 python -m venv yolov8-env
 source yolov8-env/bin/activate  
 pip install ultralytics opencv-python
+
+
+https://github.com/user-attachments/assets/eb9602a7-a4d8-4433-b4d4-96b675ac16d1
+
