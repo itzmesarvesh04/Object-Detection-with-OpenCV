@@ -1,38 +1,33 @@
 import cv2
 from ultralytics import YOLO
 
-# ✅ Set this to True for webcam, False for video file
-use_webcam = False
-
-# 📁 If using video file, provide path here
+# 📁 Path to the input video file
 video_path = r"D:\PYTHON 10HRS CWH\PROJECT\newfootball.mp4"
 
 # 🎯 Load YOLOv8 model
 model = YOLO("yolov8n.pt")
 
 # 📽️ Initialize video source
-cap = cv2.VideoCapture(0 if use_webcam else video_path)
+cap = cv2.VideoCapture(video_path)
 
-# 🛠️ Video settings (used only for saving video file)
-if not use_webcam:
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+# 🛠️ Video settings for saving
+fps = cap.get(cv2.CAP_PROP_FPS) or 30
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    # 🎥 VideoWriter for output
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out_path = r"D:\PYTHON 10HRS CWH\PROJECT\output_detected.mp4"
-    out = cv2.VideoWriter(out_path, fourcc, fps, (width, height))
-else:
-    out = None
+#  Set up VideoWriter for saving output
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out_path = r"D:\PYTHON 10HRS CWH\PROJECT\output_detected.mp4"
+out = cv2.VideoWriter(out_path, fourcc, fps, (width, height))
 
+#  Main loop
 while True:
     ret, frame = cap.read()
     if not ret:
-        print("End of stream or cannot read video.")
+        print("✅ Video processing complete or failed to read frame.")
         break
 
-    # 🧠 Object detection
+    #  Run detection
     results = model(frame, stream=True)
     people_count = 0
 
@@ -43,33 +38,30 @@ while True:
             cls_id = int(box.cls[0])
             label = model.names[cls_id]
 
-            # ✅ Count and color code
+            #  Count people and draw boxes
             if label == "person":
                 people_count += 1
-                color = (0, 255, 0)  # Green for people
+                color = (0, 255, 0)
             else:
-                color = (255, 0, 0)  # Blue for others
+                color = (255, 0, 0)
 
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
             cv2.putText(frame, f"{label} {conf:.2f}", (x1, y1 - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    # 🧮 Display count
+    # 🧮 Show people count
     cv2.putText(frame, f"People Count: {people_count}", (10, 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
 
-    # 💾 Save frame after detection/annotations
-    if out:
-        out.write(frame)
-
-    # 🖼️ Show frame
+    # 💾 Save and display frame
+    out.write(frame)
     cv2.imshow("YOLOv8 Object Detection", frame)
 
-    # ⛔ Exit with ESC
+    # ⛔ Press ESC to exit
     if cv2.waitKey(1) == 27:
         break
 
+# 🔚 Cleanup
 cap.release()
-if out:
-    out.release()
+out.release()
 cv2.destroyAllWindows()
